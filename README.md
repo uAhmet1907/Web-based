@@ -1,4 +1,4 @@
-# EduSub
+# Project name
 
 **Current stage:** Milestone 1 — design draft. Update this README throughout the project; do not start a separate document for each milestone.
 
