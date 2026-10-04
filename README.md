@@ -1,37 +1,27 @@
 # EduSub — Web-based Application
 
 > Substitute Teacher Coordination Platform  
-> FHNW — Web-based Applications (HS26) | Dr. Devid Montecchiari  
-> **Milestone 1 — Design**
+> FHNW — Web-based Applications (HS26) | Dr. Devid Montecchiari
 
----
+**Current stage:** Milestone 1 — design draft.
 
-## Table of Contents
+Update this README throughout the project; do not start a separate document for each milestone. 
 
-1. [Project Overview](#1-project-overview)
-2. [Team](#2-team)
-3. [Tech Stack](#3-tech-stack)
-4. [User Roles](#4-user-roles)
-5. [User Stories](#5-user-stories)
-6. [Workflow Table](#6-workflow-table)
-7. [API Design (Sample JSON)](#7-api-design-sample-json)
-8. [Wireframes](#8-wireframes)
-9. [Data Models](#9-data-models)
-10. [Project Structure (planned)](#10-project-structure-planned)
+Later sections will be introduced in the fourth theory session and subsequent classes. For now, document the design draft below.
 
----
+Replace the prompts with your group's current thinking. Drafts and open questions are expected; no running backend, database or complete OpenAPI contract is required for this milestone. If your idea is still undecided, use the bar scenario and class exercises as a starting point and identify what you have adapted.
 
-## 1. Project Overview
+## Project overview
 
 **EduSub** is a browser-based substitute teacher coordination platform built for a single primary school covering Kindergarten (KG1, KG2) and Primary grades (1a–6b).
 
-The platform digitises the process of finding and assigning substitute teachers when a class cannot be covered by its regular teacher. It provides two role-specific portals — Admin and Teacher — each with dedicated functionality.
+The platform digitises the process of finding and assigning substitute teachers when a class cannot be covered by its regular teacher. It provides two role-specific portals (Admin and Teacher) each with dedicated functionality.
 
-### Problem
+### Problem addressed
 
-Schools currently coordinate substitute assignments via phone calls, WhatsApp groups, and Excel sheets. This creates gaps, missed assignments, and no audit trail.
+Schools currently coordinate substitute assignments via phone calls, WhatsApp groups and Excel sheets. This creates gaps, missed assignments and no audit trail.
 
-### Solution
+### Proposed solution
 
 EduSub provides:
 - A structured **substitute request** flow (date, grade, subject, time slot, notes)
@@ -44,45 +34,36 @@ This module rebuilds EduSub from a NiceGUI monolith (Advanced Programming, SS26)
 
 **GitHub Repository:** https://github.com/uAhmet1907/Web-based
 
----
+### Team and initial responsibilities
 
-## 2. Team
+| Member | Initial responsibility | Next action |
+|---|---|---|
+| [Name] | Coordination and README | Keep decisions, questions and the milestone commit together |
+| [Name] | Users and workflow | Describe needs and the steps of one workflow |
+| [Name] | Sketches and interaction | Sketch the screens and feedback for that workflow |
+| [Name] | Data and API exploration | Prepare sample JSON and clarify the proposed operations |
 
-| Member | Responsibilities |
-|--------|-----------------|
-| Member A | Authentication endpoints, user model, database setup, JWT integration |
-| Member B | Admin dashboard, RequestService, ApplicationService, backend tests |
-| Member C | Teacher dashboard, profile pages, frontend components, documentation |
+These are suggested starting responsibilities, not permanent silos. Discuss and review each other's work; everyone should understand the draft. Adjust or rotate responsibilities as needed.
 
----
+## 1. Analysis
 
-## 3. Tech Stack
+### Scenario, users and goals
 
-| Layer | Technology |
-|-------|------------|
-| Backend | Python 3.12+, FastAPI, SQLModel, SQLite |
-| Authentication | JWT (python-jose), bcrypt (passlib) |
-| Frontend | React 18, Vite, Tailwind CSS |
-| API Communication | REST / JSON |
-| Testing | pytest, pytest-asyncio, httpx (TestClient) |
-| Dev Tools | Uvicorn, ESLint, Prettier |
-
----
-
-## 4. User Roles
+- Situation or problem: Substitute assignments are coordinated through phone calls, WhatsApp groups and Excel sheets, causing gaps, missed assignments and a missing audit trail.
+- Intended users: School administrators and substitute teachers at one primary school, including KG1/KG2 and grades 1a–6b.
+- Proposed benefit: Structured coverage requests, teacher applications and administrative approval make assignments and their status visible.
+- Initial scope: The existing README describes the full planned feature set but does not select a first implementation workflow or explicitly defer features. W-02 → W-03 → W-04 below is a candidate already described in the draft; the team must confirm the initial scope after coaching.
 
 | Role | Description |
 |------|-------------|
 | **Admin** | School administrator. Creates substitute requests, reviews teacher applications, approves/rejects teacher accounts, manages users, closes requests. |
 | **Teacher** | Registered substitute teacher. Browses open requests, submits and withdraws applications, tracks application status, manages their profile. |
 
-> All routes require a valid JWT token. Teachers additionally require `is_approved = true` before they can log in.
+### User stories and first workflow
 
----
+The following stories are retained from the existing README. Their inclusion does not mean that every story belongs to the first implementation scope.
 
-## 5. User Stories
-
-### Admin
+#### Admin
 
 | ID | As an admin, I want to… | So that… |
 |----|-------------------------|----------|
@@ -99,7 +80,7 @@ This module rebuilds EduSub from a NiceGUI monolith (Advanced Programming, SS26)
 | A-11 | View aggregated dashboard stats (open requests, pending applications, pending teachers) | I get an instant overview without navigating multiple pages |
 | A-12 | Log out | My session is ended securely |
 
-### Teacher
+#### Teacher
 
 | ID | As a teacher, I want to… | So that… |
 |----|--------------------------|----------|
@@ -118,9 +99,7 @@ This module rebuilds EduSub from a NiceGUI monolith (Advanced Programming, SS26)
 | T-13 | Change my password | I can keep my account secure |
 | T-14 | Log out | My session is ended securely |
 
----
-
-## 6. Workflow Table
+#### Workflow Table
 
 | # | Workflow | Actor(s) | Steps | Outcome |
 |---|----------|----------|-------|---------|
@@ -136,17 +115,40 @@ This module rebuilds EduSub from a NiceGUI monolith (Advanced Programming, SS26)
 | W-10 | Login (any role) | Admin / Teacher | 1. User enters email and password. 2. Backend verifies credentials; checks `is_approved` for teachers. 3. Issues JWT access token. | User is redirected to their role-specific dashboard. |
 | W-11 | Logout | Admin / Teacher | 1. User clicks "Logout". 2. Frontend deletes the JWT from storage. 3. User is redirected to the login page. | Session is terminated client-side. |
 
----
+These are intended behaviours from the original draft. W-07's automatic deletion conflicts with the stated audit-trail need; W-05's reopening behaviour also needs clarification. See the open questions in Project management.
 
-## 7. API Design (Sample JSON)
+## 2. Design
 
-All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization: Bearer <token>` header.
+### Screens and navigation
 
----
+Link or embed your sketches for the workflow (paper photos, draw.io or another tool). Explain the main inputs, actions and feedback. This builds on exercise 2. A polished or clickable prototype is not required; add one if you already have it.
 
-### 7.1 Auth
+#### Planned screens
 
-#### `POST /api/v1/auth/login`
+| Screen | Role | Description |
+|--------|------|-------------|
+| Login | All | Email + password form |
+| Teacher Registration | Teacher | Name, email, phone, password, subject selection, document upload |
+| Admin Dashboard | Admin | Stats overview (open requests, pending applications, pending teachers) |
+| Substitute Requests List | Admin / Teacher | Full requests table with status badges; filter by level for teachers |
+| Request Detail | Admin | Full request info + applicants list with approve button |
+| Admin — Teacher List | Admin | All teachers with approval status and link to profile |
+| Admin — Teacher Profile | Admin | Full teacher details, documents, approve/reject buttons |
+| Teacher Dashboard — Available | Teacher | Open requests with grade/subject, date, time slot, expiry countdown, apply button |
+| Teacher Dashboard — My Applications | Teacher | All own applications with pending / approved / rejected status + withdraw button |
+| Teacher Profile | Teacher | Edit name, phone, bio, subjects; upload profile picture; change password; staff number display |
+
+### Domain concepts and example data
+
+Link your sample JSON files for relevant things in the workflow. Use fictional data. Explain important fields, value types and references between objects; mark uncertainties. The bar catalogue and order examples are available as a starting point. There is no new fixed entity quota for this draft.
+
+#### Sample JSON and draft API examples
+
+The following API ideas use `/api/v1` and show proposed status codes and payloads, not tested endpoints. The existing authentication design uses `Authorization: Bearer <token>`. Its blanket JWT requirement conflicts with login/registration; the access rules are an **Open question**. Sample dates are example data, not milestone dates.
+
+#### Auth
+
+##### `POST /api/v1/auth/login`
 
 **Request**
 ```json
@@ -165,7 +167,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `POST /api/v1/auth/register`
+##### `POST /api/v1/auth/register`
 
 **Request**
 ```json
@@ -188,7 +190,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `POST /api/v1/auth/change-password`
+##### `POST /api/v1/auth/change-password`
 
 **Request**
 ```json
@@ -207,9 +209,9 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 
 ---
 
-### 7.2 Substitute Requests
+#### Substitute Requests
 
-#### `GET /api/v1/requests`
+##### `GET /api/v1/requests`
 
 **Response `200 OK`**
 ```json
@@ -230,7 +232,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 ]
 ```
 
-#### `POST /api/v1/requests` *(Admin only)*
+##### `POST /api/v1/requests` *(Admin only)*
 
 **Request**
 ```json
@@ -256,7 +258,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `GET /api/v1/requests/{id}/applications` *(Admin only)*
+##### `GET /api/v1/requests/{id}/applications` *(Admin only)*
 
 **Response `200 OK`**
 ```json
@@ -270,7 +272,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 ]
 ```
 
-#### `PATCH /api/v1/requests/{id}/close` *(Admin only)*
+##### `PATCH /api/v1/requests/{id}/close` *(Admin only)*
 
 **Response `200 OK`**
 ```json
@@ -282,9 +284,9 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 
 ---
 
-### 7.3 Applications
+#### Applications
 
-#### `POST /api/v1/requests/{request_id}/applications` *(Teacher only)*
+##### `POST /api/v1/requests/{request_id}/applications` *(Teacher only)*
 
 **Response `201 Created`**
 ```json
@@ -297,7 +299,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `GET /api/v1/applications/my` *(Teacher only)*
+##### `GET /api/v1/applications/my` *(Teacher only)*
 
 **Response `200 OK`**
 ```json
@@ -317,7 +319,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 ]
 ```
 
-#### `PATCH /api/v1/applications/{id}/approve` *(Admin only)*
+##### `PATCH /api/v1/applications/{id}/approve` *(Admin only)*
 
 **Response `200 OK`**
 ```json
@@ -328,15 +330,15 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `DELETE /api/v1/applications/{id}` *(Teacher — own pending application only)*
+##### `DELETE /api/v1/applications/{id}` *(Teacher — own pending application only)*
 
 **Response `204 No Content`**
 
 ---
 
-### 7.4 Subjects
+#### Subjects
 
-#### `GET /api/v1/subjects`
+##### `GET /api/v1/subjects`
 
 **Response `200 OK`**
 ```json
@@ -351,9 +353,9 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 
 ---
 
-### 7.5 Teachers (Admin view)
+#### Teachers (Admin view)
 
-#### `GET /api/v1/teachers` *(Admin only)*
+##### `GET /api/v1/teachers` *(Admin only)*
 
 **Response `200 OK`**
 ```json
@@ -370,7 +372,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 ]
 ```
 
-#### `GET /api/v1/teachers/{id}` *(Admin only)*
+##### `GET /api/v1/teachers/{id}` *(Admin only)*
 
 **Response `200 OK`**
 ```json
@@ -391,7 +393,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `PATCH /api/v1/teachers/{id}/approve` *(Admin only)*
+##### `PATCH /api/v1/teachers/{id}/approve` *(Admin only)*
 
 **Request**
 ```json
@@ -408,9 +410,9 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 
 ---
 
-### 7.6 Dashboard Stats (Admin)
+#### Dashboard Stats (Admin)
 
-#### `GET /api/v1/dashboard/admin` *(Admin only)*
+##### `GET /api/v1/dashboard/admin` *(Admin only)*
 
 **Response `200 OK`**
 ```json
@@ -424,9 +426,9 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 
 ---
 
-### 7.7 Profile (Teacher)
+#### Profile (Teacher)
 
-#### `GET /api/v1/profile`
+##### `GET /api/v1/profile`
 
 **Response `200 OK`**
 ```json
@@ -446,7 +448,7 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
-#### `PATCH /api/v1/profile`
+##### `PATCH /api/v1/profile`
 
 **Request**
 ```json
@@ -473,157 +475,69 @@ All endpoints are prefixed with `/api/v1`. Authentication is via `Authorization:
 }
 ```
 
----
+### Business rules and possible operations
 
-## 8. Wireframes
+Describe a rule and an exception in plain language. Example: order quantities must be positive; discuss what happens when an item is unavailable. Later, explain where the implementation enforces the rule.
 
-> Wireframe sketches will be provided as a separate PDF (`wireframes.pdf`) in this repository.
+| User goal | Proposed action | Example input | Expected output | Open question |
+|---|---|---|---|---|
+| Access the platform | Register; sign in; change password | Registration fields; email/password; current/new password | Pending account, access token or password-change confirmation | Which operations are public, and how long is a token valid? |
+| Publish coverage needs | Create and read substitute requests | Date, grade, subject ID, time slot, note | Request ID, `open` status, calculated expiry; request list | How do `grade` and `grade_level` map, and what if the time slot is absent? |
+| Find suitable coverage | Read subjects and open requests | Request/subject selection; educational level | Catalogue and available requests | How is filtering represented, and which subject IDs are correct? |
+| Express interest | Create an application | Request ID; current teacher | Application ID and `pending` status | How are duplicate or expired-request applications handled? |
+| Review applications | Read request applicants and own applications | Request ID or current teacher | Applicants or application statuses with request details | What feedback accompanies rejection? |
+| Confirm an assignment | Approve an application | Application ID | `approved` application and `filled` request | What happens to other pending applications? |
+| Withdraw interest | Remove own pending application | Application ID | No content (`204` in the draft) | When, if ever, should this reopen a request? |
+| Stop accepting applications | Close a request | Request ID | `closed` status | How are pending applications handled? |
+| Handle expired requests | Automatically remove expired open requests, as currently drafted | `expires_at` | Request no longer available | How is the audit trail preserved? |
+| Verify teachers | Read teacher list/profile; approve or reject an account | Teacher ID; `approved: true` in the approval sample | Teacher details and updated approval flag | Account rejection/deletion is described, but the operation is not specified. |
+| Review workload | Read admin dashboard statistics | Signed-in admin | Request, application and teacher counts | Exact counting rules are TBD. |
+| Maintain own profile | Read/change profile; upload documents or picture | Name, phone, bio, subject IDs; selected files | Updated profile | File-upload operations and restrictions are TBD. |
+| Reject an application | Change application status, as described in A-06 | Application ID; remaining details TBD | Intended `rejected` state | No rejection endpoint or sample is defined. |
+| End a session | Remove the client-side token and return to login | Current session | Login screen | Confirm the intended treatment of tokens that remain valid. |
 
-### Planned Screens
+Use plain language; final endpoints and implementation can follow after coaching. These are draft ideas, not a complete CRUD implementation.
 
-| Screen | Role | Description |
-|--------|------|-------------|
-| Login | All | Email + password form |
-| Teacher Registration | Teacher | Name, email, phone, password, subject selection, document upload |
-| Admin Dashboard | Admin | Stats overview (open requests, pending applications, pending teachers) |
-| Substitute Requests List | Admin / Teacher | Full requests table with status badges; filter by level for teachers |
-| Request Detail | Admin | Full request info + applicants list with approve button |
-| Admin — Teacher List | Admin | All teachers with approval status and link to profile |
-| Admin — Teacher Profile | Admin | Full teacher details, documents, approve/reject buttons |
-| Teacher Dashboard — Available | Teacher | Open requests with grade/subject, date, time slot, expiry countdown, apply button |
-| Teacher Dashboard — My Applications | Teacher | All own applications with pending / approved / rejected status + withdraw button |
-| Teacher Profile | Teacher | Edit name, phone, bio, subjects; upload profile picture; change password; staff number display |
 
----
+### Inspiration from existing apps or APIs — optional 
+If useful for your design, link an existing app, website or API and add one or two sentences about what you would adopt or improve for your users. No separate research report or external API integration is required for this milestone.
 
-## 9. Data Models
+EduSub builds on the group's NiceGUI monolith from Advanced Programming (SS26). The existing proposal separates that application into a FastAPI REST backend and React frontend.
 
-### User
+## 3. Project management
 
-| Field | Type | Notes |
-|-------|------|-------|
-| id | int | Primary key |
-| full_name | str | |
-| personal_number | str | Auto-generated staff number |
-| email | str | Unique |
-| hashed_password | str | bcrypt |
-| role | enum | `admin` / `teacher` |
-| is_approved | bool | Teachers only; defaults to `false` |
-| phone | str | Digits only |
-| bio | str | Optional |
-| profile_picture | str | Path to uploaded file |
-| documents_path | str | Comma-separated paths to uploaded documents |
-| created_at | datetime | |
+### Decisions, open questions and next steps
 
-### Subject
+| Question / decision | Current position | Next step / person |
+|---|---|---|
+| Project idea | EduSub for a single school, KG and primary grades. | Confirm first implementation scope after coaching / TBD. |
+| Sketches | `wireframes.pdf` is planned, not supplied in the README. | Add sketches with screens, actions and feedback / TBD. |
+| First workflow and deferred features | Full story/workflow catalogue exists; first scope is not selected. | Confirm candidate W-02 → W-04 and identify what can wait / TBD. |
+| Team membership and allocation | Member A–C are placeholders. | Record actual members and confirm responsibilities / TBD. |
 
-| Field | Type | Notes |
-|-------|------|-------|
-| id | int | Primary key |
-| name | str | e.g. "Mathematics" |
-| level | str | `kg` / `primary` |
-| grades | str | e.g. "3-6", "KG" |
+### Milestone progress
 
-### UserSubject (junction)
+| Milestone | Available evidence | Status / next step |
+|---|---|---|
+| 1 — Design draft | Project problem, intended users and initial scope, user stories and workflow table, planned interface screens; sample JSON, proposed API operations, business rules and documented open questions. | Ready for design coaching. Add the final interface sketches, confirm team responsibilities and discuss the remaining open questions during coaching. After coaching, record the agreed changes and select the initial implementation workflow. |
 
-| Field | Type | Notes |
-|-------|------|-------|
-| user_id | int | FK → User |
-| subject_id | int | FK → Subject |
+Use the Moodle assignment for the complete milestones, dates and assessment criteria. Describe contributions and decisions; commit counts do not measure individual effort.
 
-### SubstituteRequest
+## 4. References and acknowledgements
 
-| Field | Type | Notes |
-|-------|------|-------|
-| id | int | Primary key |
-| date | date | Coverage date |
-| grade_level | str | e.g. "3a", "KG1" |
-| subject_id | int | FK → Subject |
-| time_slot | str | Optional, format HH:MM-HH:MM |
-| note | str | Optional additional notes |
-| status | enum | `open` / `filled` / `closed` |
-| expires_at | datetime | Auto-calculated: 12h before assignment start |
-| created_by | int | FK → User (admin) |
-| created_at | datetime | |
+- [EduSub repository](https://github.com/uAhmet1907/Web-based): repository identified in the existing README.
+- **EduSub, Advanced Programming (SS26):** earlier NiceGUI project identified as the starting point. Repository link, reused components and specific adaptations: **TBD**.
+- **Official FHNW Web-based Applications HS26 Milestone 1 README template:** supplied by the user; source of this document's structure and handoff checklist. Moodle link: **TBD**.
+- **Template lineage:** the earlier [Pizzeria Reference Project](https://github.com/FHNW-INT/Pizzeria_Reference_Project) organised documentation around analysis, design, implementation, execution and project management. The supplied template updates that structure for the HS26 Python/FastAPI teaching path; its Java/Spring and hosted Budibase setup instructions do not apply here.
+- **Documentation, reused assets, libraries and other assistance:** the technology proposal lists planned tools, but actual use, documentation references and further acknowledgements are **TBD**.
 
-### Application
+## Friday handoff checklist
 
-| Field | Type | Notes |
-|-------|------|-------|
-| id | int | Primary key |
-| request_id | int | FK → SubstituteRequest |
-| teacher_id | int | FK → User |
-| status | enum | `pending` / `approved` / `rejected` |
-| applied_at | datetime | |
+- Commit this README and the available draft material before the milestone.
+- First join the module's MS Team using the link in Moodle. The lecturer will then add you to your group's private channel during the week.
+- Submit the GitHub repository link in Moodle by Friday, following the milestone instructions published after class.
+- Ensure the lecturer can access the repository; public visibility is not required.
+- If you do not yet have a group channel and your team composition is not recorded in Moodle's team formation activity, email the lecturer with all team members' names. If the composition is already recorded, join the Team so you can be added to the channel. Contact the lecturer if the channel is still unavailable before the deadline.
+- Refer to Moodle for the milestone date and the full assignment requirements.
 
----
-
-## 10. Project Structure (planned)
-
-```
-Web-based/
-├── backend/
-│   ├── main.py                   # FastAPI app, router registration
-│   ├── database.py               # SQLite engine, session factory
-│   ├── models/
-│   │   ├── user.py
-│   │   ├── request.py
-│   │   ├── application.py
-│   │   └── subject.py
-│   ├── schemas/                  # Pydantic request/response schemas
-│   │   ├── auth.py
-│   │   ├── request.py
-│   │   ├── application.py
-│   │   ├── subject.py
-│   │   └── user.py
-│   ├── services/
-│   │   ├── auth_service.py
-│   │   ├── request_service.py
-│   │   ├── application_service.py
-│   │   └── profile_service.py
-│   ├── routers/
-│   │   ├── auth.py
-│   │   ├── requests.py
-│   │   ├── applications.py
-│   │   ├── subjects.py
-│   │   ├── teachers.py
-│   │   ├── dashboard.py
-│   │   └── profile.py
-│   ├── core/
-│   │   ├── security.py           # JWT creation & verification
-│   │   └── dependencies.py       # get_current_user, require_admin
-│   └── tests/
-│       ├── test_auth.py
-│       ├── test_requests.py
-│       ├── test_applications.py
-│       └── test_profile.py
-│
-├── frontend/
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── src/
-│   │   ├── main.tsx
-│   │   ├── App.tsx
-│   │   ├── api/                  # Axios client + endpoint functions
-│   │   ├── components/           # Shared UI components
-│   │   ├── pages/
-│   │   │   ├── Login.tsx
-│   │   │   ├── Register.tsx
-│   │   │   ├── admin/
-│   │   │   │   ├── Dashboard.tsx
-│   │   │   │   ├── Requests.tsx
-│   │   │   │   ├── RequestDetail.tsx
-│   │   │   │   ├── Teachers.tsx
-│   │   │   │   └── TeacherProfile.tsx
-│   │   │   └── teacher/
-│   │   │       ├── Dashboard.tsx
-│   │   │       ├── MyApplications.tsx
-│   │   │       └── Profile.tsx
-│   │   └── store/                # Auth state (JWT, role)
-│   └── public/
-│
-├── requirements.txt
-├── package.json
-└── README.md
-```
-
+Keep credentials and personal data out of the repository. The draft and its progress are useful evidence for project management; commit counts or lines of code are not measures of individual contribution.
