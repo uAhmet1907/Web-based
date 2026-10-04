@@ -38,10 +38,10 @@ This module rebuilds EduSub from a NiceGUI monolith (Advanced Programming, SS26)
 
 | Member | Initial responsibility | Next action |
 |---|---|---|
-| [Name] | Coordination and README | Keep decisions, questions and the milestone commit together |
-| [Name] | Users and workflow | Describe needs and the steps of one workflow |
-| [Name] | Sketches and interaction | Sketch the screens and feedback for that workflow |
-| [Name] | Data and API exploration | Prepare sample JSON and clarify the proposed operations |
+| Mert Kirtas | Coordination and README | Keep decisions, questions and the milestone commit together |
+| Ugur Ahmet Iyidogan | Users and workflow | Describe needs and the steps of one workflow |
+| Ata Erduran | Sketches and interaction | Sketch the screens and feedback for that workflow |
+|  | Data and API exploration | Prepare sample JSON and clarify the proposed operations |
 
 These are suggested starting responsibilities, not permanent silos. Discuss and review each other's work; everyone should understand the draft. Adjust or rotate responsibilities as needed.
 
