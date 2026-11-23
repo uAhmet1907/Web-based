@@ -1,19 +1,116 @@
 # EduSub — Web-based Application
 
+**Latest frontend iteration (team-confirmed, 18 November 2026):** The administrator dashboard adds an API-backed action center (upcoming open lessons, pending applications and teacher approvals) and client-side search/status/grade filters for saved requests. The implementation reuses existing API contracts and records the alternatives and trade-offs in [Frontend Decisions](docs/FRONTEND-DECISIONS.md). The frontend unit suite reports **9 passed**, and a team member confirmed **3 Playwright tests passed in 11.2 seconds**, including the new UI scenario. A separate manual usability review remains outstanding.
+
 > Substitute Teacher Coordination Platform  
 > FHNW — Web-based Applications (HS26) | Dr. Devid Montecchiari
 
-**Current stage:** Milestone 1 — design draft.
+**Current stage (16 November 2026):** Milestone 1 design documentation + Milestone 2 functional backend/API slice + an integrated **Milestone 3 React/Vite administrator frontend**. A team member confirmed five successful browser integration checks (login, dashboard, request creation, reloaded request listing); an invalid time-range test initially exposed a frontend issue, which was corrected and successfully retested manually.
 
-Update this README throughout the project; do not start a separate document for each milestone. 
+**Milestone 3 integration:** [Frontend setup, walkthrough and demo checklist](docs/MILESTONE-3.md). The confirmed first UI in `frontend/` covers administrator login, creation of a request and reading persisted requests. Teacher-facing functionality is being added incrementally.
 
-Later sections will be introduced in the fourth theory session and subsequent classes. For now, document the design draft below.
+**Admin request CRUD (team-verified, 16 November 2026):** The React request table offers inline editing (`PATCH`) and confirmed deletion (`DELETE`) of open requests, with client-side time-range validation, visible API errors and reloading after success. The team reports **4/4 manual UI tests passed**: edit/persist, reject inverted lesson time, delete an open request without applications, and hide actions for a filled request. The backend remains authoritative for status and application-conflict rules. **Deleting a request with existing applications has not yet been browser-tested**; see [Milestone 3 checklist](docs/MILESTONE-3.md).
 
-Replace the prompts with your group's current thinking. Drafts and open questions are expected; no running backend, database or complete OpenAPI contract is required for this milestone. If your idea is still undecided, use the bar scenario and class exercises as a starting point and identify what you have adapted.
+**New automated test coverage (team-confirmed, 16 November 2026):** An API regression test verifies `DELETE` returns 409 and preserves both request and application when a pending application exists (**14 backend tests passed**). A Playwright end-to-end browser scenario (`cd frontend && npm run test:e2e`) uses an isolated temporary SQLite database. Following a test-selector correction, a team member reported a successful local Windows run: **`1 passed (11.1s)`**. Chromium cannot launch under the assistant's development-sandbox restrictions, so this is **team-reported local browser evidence, not CI evidence**. Setup and limitations are in [Milestone 3](docs/MILESTONE-3.md).
+
+**Responsive admin UI (team-confirmed, 18 November 2026):** Native CSS Grid/Flexbox and media queries adapt the admin dashboard to desktop, tablet and phone widths. The main request table becomes labelled cards on narrow screens. The team reports **`2 passed`** for the Playwright suite, covering the existing application workflow and the new 1440/768/375 px viewport test. This is local test evidence, not a manual usability/accessibility audit or CI result. See [frontend decisions](docs/FRONTEND-DECISIONS.md).
+
+**Frontend progress:** A team member has now manually confirmed the approved teacher login, listing of open requests, dynamic class filter and successful application with status `pending`. A new administrator application-management component supports approve/reject and refreshes the requests list after the API decision; **that new admin UI is implemented but not yet manually verified**. See [Milestone 3 evidence](docs/MILESTONE-3.md) and [frontend design decisions and CW46 teaching concepts](docs/FRONTEND-DECISIONS.md).
+
+**Next registration workflow:** The React login page now also offers teacher registration, and administrators have a pending-teacher approval section. This uses the existing `multipart/form-data` registration API and the protected teacher-approval API. Automated backend tests verify pending-account login denial and successful login after approval (**13 backend tests passed locally**). A team member has now manually confirmed the complete registration → admin approval → teacher login browser workflow. Document uploads are intentionally deferred pending a security review; use fake demo identities.
+
+This is the living project README, retaining the original Milestone 1 design draft and recording the subsequently implemented Milestone 2 backend. The source-of-truth OpenAPI contract is generated at `/openapi.json`; the earlier examples further down are **historical design examples** and may differ from the actual endpoints. For verified endpoint names and JSON payloads, use the current API summary below and `/docs`.
+
+**Development and evidence:** Work is committed on [`mtas245/Web-based` branch `feature/milestone1-2`](https://github.com/mtas245/Web-based/tree/feature/milestone1-2), a fork of the [team repository](https://github.com/uAhmet1907/Web-based). The team repository has not been updated by this work. See [the detailed Milestone 1–2 implementation and test record](docs/MILESTONE-1-2.md).
+
+## Milestone 2 — working backend, API and evidence
+
+### Implemented slice and boundaries
+
+The browser-independent FastAPI backend uses SQLModel with local SQLite persistence (`backend/edusub.db`). The tested core workflow is: administrator authenticates → creates an open substitute request for an existing subject → an approved teacher signs in and applies → administrator approves an application → the request changes to `filled`. An administrator can also read, update and delete an open request, subject to rules and validation.
+
+The application layers are:
+- **API boundary and contracts:** `backend/routers/` plus `backend/schemas/` (FastAPI/OpenAPI and Pydantic).
+- **Business logic:** `backend/services/` (request status transitions, application decisions, account workflows).
+- **Relational persistence:** `backend/models/` and `backend/database.py` (SQLModel + SQLite).
+- **Authentication / access checks:** `backend/core/` (JWT and role dependencies).
+
+The initial React/Vite administrator and teacher interfaces are **implemented and their basic workflows manually demonstrated**. The newly added admin decision buttons and the full combined workflow are pending manual verification. The earlier NiceGUI-based [EduSub Advanced Programming project](https://github.com/mtas245/EduSub_Project) supplied domain concepts/workflows but is not evidence that this project's new frontend works.
+
+### Reproduce locally (Windows / PowerShell)
+
+From the cloned repository root:
+
+```powershell
+cd backend
+py -3.12 -m venv .venv
+.\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt
+.\\.venv\\Scripts\\python.exe -m pytest -q
+.\\.venv\\Scripts\\python.exe -m uvicorn main:app --reload
+```
+
+The API root is `http://127.0.0.1:8000/`, Swagger UI is `http://127.0.0.1:8000/docs`, and machine-readable OpenAPI is `http://127.0.0.1:8000/openapi.json`. Run from `backend/`, because the SQLite database URL is relative to that directory.
+
+To bootstrap a **local-only** administrator after installing dependencies, open another terminal in `backend/`:
+
+```powershell
+.\\.venv\\Scripts\\python.exe scripts/create_local_admin.py
+```
+
+Enter a test email, name and unique password interactively; do not commit passwords, local databases or JWTs. The script refuses to overwrite an account with the same email. In `POST /api/v1/auth/login`, enter the email in the form's **username** field, then authorize Swagger using the issued token. Subject fixtures can be created using the admin-only `POST /api/v1/subjects/seed`, followed by `GET /api/v1/subjects/` to discover real subject IDs.
+
+### Implemented API contracts — examples
+
+| Method | Route | Access / behavior |
+| --- | --- | --- |
+| POST | `/api/v1/auth/login` | Public form login; email in `username`, password in `password` |
+| POST | `/api/v1/auth/register` | Public teacher registration via `multipart/form-data`, initially unapproved |
+| GET / PATCH | `/api/v1/teachers/pending`; `/api/v1/teachers/{teacher_id}/approve` | Admin lists pending teachers and approves one (GET and PATCH respectively) |
+| GET / POST | `/api/v1/subjects/`; `/api/v1/subjects/seed` | Authenticated list / admin seed |
+| GET / POST | `/api/v1/requests/` | Admin list / admin create |
+| GET / PATCH / DELETE | `/api/v1/requests/{request_id}` | Admin read / edit open / delete open with no applications |
+| GET | `/api/v1/requests/open` | Approved teacher lists open, unexpired requests |
+| POST | `/api/v1/requests/{request_id}/apply` | Approved teacher applies |
+| GET / PATCH | `/api/v1/applications/pending`; `/api/v1/applications/{application_id}/approve` | Admin list / approval (GET and PATCH respectively) |
+
+Actual admin request-create JSON body (choose a future date and an existing subject ID):
+
+```json
+{
+  "date": "2026-12-01",
+  "grade_level": "3a",
+  "subject_id": 1,
+  "time_slot": "08:00-10:00",
+  "note": "Local API demonstration"
+}
+```
+
+The API uses `grade_level`, not the older draft field `grade`. `POST /auth/register` is a multipart form, **not** a JSON object, and `POST /auth/login` uses OAuth2 form fields. Request creation returns 201; invalid schema 422, unknown subject 400, missing authentication 401, missing permission 403. Request deletion returns 204, and reading a deleted request returns 404.
+
+### Test evidence
+
+**Milestone 3, team-confirmed 16 November 2026:** Five of five manual browser integration checks passed (admin login, dashboard, request creation and display). The wrong-password negative case passed; the invalid time range (`12:00–08:00`) was reportedly saved, the frontend was corrected, and the repeat browser test **passed**: an inline validation error appears and the invalid request is not created. The backend separately rejects the exact range with HTTP 422 in automated tests. See [docs/MILESTONE-3.md](docs/MILESTONE-3.md).
+
+
+**User-confirmed locally, 27 October 2026:** `python -m pytest -q` with Python 3.12.10 produced **11 passed, 16 warnings in 1.27s** (zero failures). These tests cover schema/API contracts and business workflow, but dependency overrides do not constitute complete real-JWT security testing.
+
+Separately, a team member confirmed **19 successful manual Swagger endpoint checks** covering admin authentication and denial without authentication, subject setup, request CRUD, invalid inputs, teacher sign-in/application, admin approval and final request status `filled`. Registration and teacher-account approval also worked according to the user, though their precise HTTP statuses were not provided. These are user-reported demonstrations, not independent CI results. The detailed scenario-by-scenario results and limitations are in [docs/MILESTONE-1-2.md](docs/MILESTONE-1-2.md).
+
+### Outstanding / not yet evidenced
+
+- Review the [low-fidelity wireframes](docs/UI-WIREFRAMES.md) with the team and obtain design feedback; the initial responsive administrator UI exists but is not a finished full-product design.
+- Finalize **actual** contributions and responsibilities for all group members; the initial assignment table below is tentative, with a fourth-member placeholder.
+- Record lecturer/coaching feedback, scope decisions and agreed deferrals. Dates/deadlines should be checked in Moodle.
+- Save redacted evidence screenshots or responses and audit remaining error/authorization cases (`403` for teacher on admin routes; duplicate applications and conflicting approvals).
+- Resolve security concerns before real users: hardcoded JWT signing key, uploaded document exposure/name handling, concurrent approval protection and expiry/audit-trail policy.
+- Extend the demonstrated admin frontend integration to teacher application/approval screens and verify error cases end-to-end. See [Milestone 3 evidence](docs/MILESTONE-3.md).
+
+---
+
 
 ## Project overview
 
-**EduSub** is a browser-based substitute teacher coordination platform built for a single primary school covering Kindergarten (KG1, KG2) and Primary grades (1a–6b).
+**EduSub** is a cross-school substitute teacher coordination platform. Participating primary schools manage their own vacancies, while approved substitute teachers can discover and apply for open assignments across schools. The prototype covers Kindergarten (KG1, KG2) and Primary grades (1a–6b).
 
 The platform digitises the process of finding and assigning substitute teachers when a class cannot be covered by its regular teacher. It provides two role-specific portals (Admin and Teacher) each with dedicated functionality.
 
@@ -30,11 +127,11 @@ EduSub provides:
 - A **teacher onboarding** flow including document upload and account approval
 - A **teacher profile** system (profile picture, bio, subjects, personal staff number)
 
-This module rebuilds EduSub from a NiceGUI monolith (Advanced Programming, SS26) into a proper **FastAPI REST backend** and **React (Vite) frontend** with JWT-based authentication and a clean API/UI separation.
+This module adapts the earlier NiceGUI EduSub concepts into an independently callable **FastAPI REST backend** with JWT-based authentication. An initial **React (Vite) administrator frontend is implemented and manually demonstrated**; complete teacher-facing integration remains to be built.
 
 **GitHub Repository:** https://github.com/uAhmet1907/Web-based
 
-### Team and initial responsibilities
+### Team and initial responsibilities (provisional; actual contributions still to confirm)
 
 | Member | Initial responsibility | Next action |
 |---|---|---|
@@ -50,7 +147,7 @@ These are suggested starting responsibilities, not permanent silos. Discuss and 
 ### Scenario, users and goals
 
 - Situation or problem: Substitute assignments are coordinated through phone calls, WhatsApp groups and Excel sheets, causing gaps, missed assignments and a missing audit trail.
-- Intended users: School administrators and substitute teachers at one primary school, including KG1/KG2 and grades 1a–6b.
+- Intended users: Administrators of participating primary schools and substitute teachers seeking assignments across those schools, including KG1/KG2 and grades 1a–6b.
 - Proposed benefit: Structured coverage requests, teacher applications and administrative approval make assignments and their status visible.
 - Initial scope: The existing README describes the full planned feature set but does not select a first implementation workflow or explicitly defer features. W-02 → W-03 → W-04 below is a candidate already described in the draft; the team must confirm the initial scope after coaching.
 
@@ -119,6 +216,10 @@ These are intended behaviours from the original draft. W-07's automatic deletion
 
 ## 2. Design
 
+### First low-fidelity wireframes (27 October 2026)
+
+Four editable text wireframes plus a mobile layout and documented error states are available in **[docs/UI-WIREFRAMES.md](docs/UI-WIREFRAMES.md)**: login, administrator request management/new request, teacher available requests/application, administrator application approval. They follow workflows W-01 to W-04. These are **proposed sketches**, not implemented interfaces, and must still be reviewed with the team and lecturer. Some suggested filters and per-request applicant views would need client-side handling or additional API support.
+
 ### Screens and navigation
 
 Link or embed your sketches for the workflow (paper photos, draw.io or another tool). Explain the main inputs, actions and feedback. This builds on exercise 2. A polished or clickable prototype is not required; add one if you already have it.
@@ -144,7 +245,7 @@ Link your sample JSON files for relevant things in the workflow. Use fictional d
 
 #### Sample JSON and draft API examples
 
-The following API ideas use `/api/v1` and show proposed status codes and payloads, not tested endpoints. The existing authentication design uses `Authorization: Bearer <token>`. Its blanket JWT requirement conflicts with login/registration; the access rules are an **Open question**. Sample dates are example data, not milestone dates.
+The following historical Milestone 1 API ideas use `/api/v1` and show **draft** status codes and payloads, not a reliable description of the running API. Refer to the Milestone 2 section at the top and live `/docs` for implemented endpoints. The existing authentication design uses `Authorization: Bearer <token>`. Its blanket JWT requirement conflicts with login/registration; the access rules are an **Open question**. Sample dates are example data, not milestone dates.
 
 #### Auth
 
@@ -510,7 +611,7 @@ EduSub builds on the group's NiceGUI monolith from Advanced Programming (SS26). 
 
 | Question / decision | Current position | Next step / person |
 |---|---|---|
-| Project idea | EduSub for a single school, KG and primary grades. | Confirm first implementation scope after coaching / TBD. |
+| Project idea | EduSub for multiple schools sharing a pool of substitute teachers, KG and primary grades. | Five Basel school names are used as fictional demonstration organisations; no affiliation is implied. |
 | Sketches | `wireframes.pdf` is planned, not supplied in the README. | Add sketches with screens, actions and feedback / TBD. |
 | First workflow and deferred features | Full story/workflow catalogue exists; first scope is not selected. | Confirm candidate W-02 → W-04 and identify what can wait / TBD. |
 | Team membership and allocation | Member A–C are placeholders. | Record actual members and confirm responsibilities / TBD. |
